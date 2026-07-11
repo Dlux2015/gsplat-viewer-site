@@ -6,7 +6,7 @@ Web Worker depth sort.
 
 **Live:** https://dlux2015.github.io/gsplat-viewer-site/
 
-Controls: drag to orbit · wheel to zoom · right-drag to pan · drag & drop any
+Controls: drag to orbit · wheel to zoom · right-drag to pan · U to flip up-axis · drag & drop any
 `.splat` file onto the page to view it.
 
 ## Embed in your own site

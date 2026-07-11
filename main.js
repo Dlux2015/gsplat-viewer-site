@@ -283,12 +283,22 @@ function autoFrame(positions, n) {
     1e-3
   );
   controls.target.copy(center);
-  camera.position.copy(center).add(new THREE.Vector3(0.4, -0.3, 1).normalize().multiplyScalar(radius * 1.8));
+  // COLMAP worlds are Y-down (image convention), so +Y-up cameras render
+  // scenes upside down. Default to -Y up; the U key flips for other sources.
+  camera.up.set(0, -1, 0);
+  camera.position.copy(center).add(new THREE.Vector3(0.4, 0.3, 1).normalize().multiplyScalar(radius * 1.8));
   camera.near = radius / 1000;
   camera.far = radius * 100;
   camera.updateProjectionMatrix();
   controls.update();
 }
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "u" || e.key === "U") {
+    camera.up.y *= -1;
+    controls.update();
+  }
+});
 
 function restartWorker(positions) {
   if (worker) worker.terminate();
