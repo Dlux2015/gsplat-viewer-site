@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Gaussian splat viewer. Contract: docs/PIPELINE.md Stage 5 + splat-export-viewer skill.
+     Zero build step: plain ES modules + import map, served by `python -m http.server`
+     via `uv run gsplat-pipeline view --scene <name>`. -->
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>gsplat viewer</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
+    #canvas { width: 100%; height: 100%; display: block; }
+    #overlay {
+      position: fixed; top: 10px; left: 10px; padding: 8px 12px;
+      font: 12px/1.6 ui-monospace, Consolas, monospace; color: #dfe6ee;
+      background: rgba(0, 0, 0, 0.55); border-radius: 6px; pointer-events: none;
+      white-space: pre;
+    }
+    #message {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      font: 15px/1.7 system-ui, sans-serif; color: #9aa7b4; text-align: center;
+      pointer-events: none; padding: 2rem;
+    }
+    #message.hidden { display: none; }
+    body.dragover::after {
+      content: "drop .splat to load"; position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font: 700 24px system-ui, sans-serif; color: #fff;
+      background: rgba(30, 100, 200, 0.35); border: 3px dashed #6af;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="overlay">loading…</div>
+  <div id="message" class="hidden"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
