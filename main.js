@@ -259,8 +259,21 @@ function loadBuffer(name, buffer) {
   sceneName = name;
 
   autoFrame(positions, n);
+  if (pendingCamera) applyCameraPose(pendingCamera);
   restartWorker(positions);
   showMessage(null);
+}
+
+// Manifest-supplied initial pose (a real capture viewpoint beats a guessed
+// bounding-box framing, especially for planar scenes). Overrides autoFrame's
+// position/target but keeps its near/far from the scene radius.
+let pendingCamera = null;
+
+function applyCameraPose(pose) {
+  if (Array.isArray(pose.up)) camera.up.fromArray(pose.up);
+  if (Array.isArray(pose.position)) camera.position.fromArray(pose.position);
+  if (Array.isArray(pose.target)) controls.target.fromArray(pose.target);
+  controls.update();
 }
 
 // Auto-frame from the splat bounding box — spawning the camera inside the
@@ -406,20 +419,30 @@ function animate() {
 }
 animate();
 
+// Manifest entries are either "name" or {name, camera:{position,target,up}}.
+// Written by the `view` CLI; edited by hand for static-hosted galleries.
+async function loadManifest() {
+  try {
+    const r = await fetch("scenes/index.json");
+    if (!r.ok) return [];
+    const list = await r.json();
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
 const params = new URLSearchParams(location.search);
 const requested = params.get("scene");
-if (requested) {
-  fetchScene(requested);
-} else {
-  // No ?scene given: fall back to the first entry of scenes/index.json
-  // (written by the `view` CLI, and by hand for static-hosted galleries).
-  fetch("scenes/index.json")
-    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("no manifest"))))
-    .then((list) => {
-      if (Array.isArray(list) && list.length) fetchScene(list[0]);
-      else throw new Error("empty manifest");
-    })
-    .catch(() =>
-      showMessage("No ?scene=<name> given — drag & drop a .splat file to view it.")
-    );
-}
+loadManifest().then((manifest) => {
+  const entryFor = (name) =>
+    manifest.find((e) => (typeof e === "string" ? e : e.name) === name);
+  let entry = requested ? (entryFor(requested) ?? requested) : manifest[0];
+  if (!entry) {
+    showMessage("No ?scene=<name> given — drag & drop a .splat file to view it.");
+    return;
+  }
+  if (typeof entry === "string") entry = { name: entry };
+  pendingCamera = entry.camera ?? null;
+  fetchScene(entry.name);
+});
